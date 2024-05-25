@@ -21,7 +21,10 @@ int main() {
         cout << "5. Dodaj goscia do stolika" << endl;
         cout << "6. Usun goscia ze stolika" << endl;
         cout << "7. Pokaz stoliki" << endl;
-        cout << "8. Wyjscie" << endl;
+        cout << "8. Generuj losowe dane" << endl;
+        cout << "9. Generuj i pokaz rekordy" << endl;
+        cout << "10. Parsuj rekordy" << endl;
+        cout << "11. Wyjscie" << endl;
         cin >> wybor;
         int stolik_id;
         string imie;
@@ -71,6 +74,29 @@ int main() {
                 pokaz_stoliki(kawiarnia.stoliki, kawiarnia.liczba_stolikow);
                 break;
             case 8:
+                generuj_losowe_dane(kawiarnia);
+                break;
+            case 9: {
+                vector<string> rekordy;
+                uniform_int_distribution<int> dist_rozmiar(50, 100);
+                random_device rd;
+                default_random_engine eng(rd());
+                int rozmiar = dist_rozmiar(eng);
+                generuj_rekordy(rekordy, rozmiar);
+                pokaz_rekordy(rekordy);
+                break;
+            }
+            case 10: {
+                vector<string> rekordy;
+                uniform_int_distribution<int> dist_rozmiar(50, 100);
+                random_device rd;
+                default_random_engine eng(rd());
+                int rozmiar = dist_rozmiar(eng);
+                generuj_rekordy(rekordy, rozmiar);
+                parsuj_rekordy(rekordy);
+                break;
+            }
+            case 11:
                 usun(kawiarnia.kelnerzy, kawiarnia.liczba_kelnerow);
                 delete[] kawiarnia.stoliki;
                 return 0;

@@ -2,6 +2,11 @@
 #define KAWIARNIA_H
 
 #include <string>
+#include <string_view>
+#include <random>
+#include <vector>
+#include <iostream>
+
 using namespace std;
 
 const int MAKS_GOSCI = 4;
@@ -75,5 +80,10 @@ void dodaj(Kelner**& kelnerzy, int& liczba_kelnerow);
 void dodaj(Menedzer**& menedzerowie, int& liczba_menedzerow);
 void usun(Kelner**& kelnerzy, int& liczba_kelnerow);
 void oblicz_srednia(const Menedzer& menedzer);
+
+void generuj_losowe_dane(Kawiarnia& kawiarnia);
+void generuj_rekordy(vector<string>& rekordy, int rozmiar);
+void pokaz_rekordy(const vector<string>& rekordy);
+void parsuj_rekordy(const vector<string>& rekordy);
 
 #endif // KAWIARNIA_H
