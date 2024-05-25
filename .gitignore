@@ -1,0 +1,10 @@
+# Ignoruj pliki wykonywalne
+main
+
+# Ignoruj pliki tymczasowe edytorów
+*.swp
+*.tmp
+*.temp
+
+# Ignoruj katalogi budowania
+/build/
