@@ -19,6 +19,7 @@ void dodaj_goscia(Stolik& stolik, const string& imie) {
         stolik.goscie[stolik.liczba_gosci].imie = imie;
         stolik.goscie[stolik.liczba_gosci].status = OBECNY;
         stolik.liczba_gosci++;
+        stolik.status = ZAJETY;
     } else {
         cout << "Stolik pelny!" << endl;
     }
@@ -31,6 +32,9 @@ void usun_goscia(Stolik& stolik, const string& imie) {
                 stolik.goscie[j] = stolik.goscie[j + 1];
             }
             stolik.liczba_gosci--;
+            if (stolik.liczba_gosci == 0) {
+                stolik.status = WOLNY;
+            }
             return;
         }
     }
@@ -48,6 +52,8 @@ void stworz(Menedzer**& menedzerowie, const int& liczba) {
     menedzerowie = new Menedzer*[liczba];
     for(int i = 0; i < liczba; ++i) {
         menedzerowie[i] = new Menedzer;
+        menedzerowie[i]->menu = nullptr;
+        menedzerowie[i]->liczba_pozycji = 0;
     }
 }
 
@@ -55,11 +61,21 @@ void stworz(Kelner**& kelnerzy, const int& liczba) {
     kelnerzy = new Kelner*[liczba];
     for(int i = 0; i < liczba; ++i) {
         kelnerzy[i] = new Kelner;
+        kelnerzy[i]->zamowienia = nullptr;
+        kelnerzy[i]->liczba_zamowien = 0;
+        kelnerzy[i]->liczba_pozycji_w_menu = 0;
+        kelnerzy[i]->zbior_zamowien = nullptr;
     }
 }
 
 void usun(Kelner**& kelnerzy, int& liczba_kelnerow) {
     for(int i = 0; i < liczba_kelnerow; ++i) {
+        if (kelnerzy[i]->zbior_zamowien != nullptr) {
+            for (int j = 0; j < kelnerzy[i]->liczba_pozycji_w_menu; ++j) {
+                delete[] kelnerzy[i]->zbior_zamowien[j];
+            }
+            delete[] kelnerzy[i]->zbior_zamowien;
+        }
         delete kelnerzy[i];
     }
     delete[] kelnerzy;
@@ -73,6 +89,10 @@ void dodaj(Kelner**& kelnerzy, int& liczba_kelnerow) {
         nowi_kelnerzy[i] = kelnerzy[i];
     }
     nowi_kelnerzy[liczba_kelnerow] = new Kelner;
+    nowi_kelnerzy[liczba_kelnerow]->zamowienia = nullptr;
+    nowi_kelnerzy[liczba_kelnerow]->liczba_zamowien = 0;
+    nowi_kelnerzy[liczba_kelnerow]->liczba_pozycji_w_menu = 0;
+    nowi_kelnerzy[liczba_kelnerow]->zbior_zamowien = nullptr;
     delete[] kelnerzy;
     kelnerzy = nowi_kelnerzy;
     ++liczba_kelnerow;
@@ -85,6 +105,8 @@ void dodaj(Menedzer**& menedzerowie, int& liczba_menedzerow) {
         nowi_menedzerowie[i] = menedzerowie[i];
     }
     nowi_menedzerowie[liczba_menedzerow] = new Menedzer;
+    nowi_menedzerowie[liczba_menedzerow]->menu = nullptr;
+    nowi_menedzerowie[liczba_menedzerow]->liczba_pozycji = 0;
     delete[] menedzerowie;
     menedzerowie = nowi_menedzerowie;
     ++liczba_menedzerow;
@@ -92,8 +114,18 @@ void dodaj(Menedzer**& menedzerowie, int& liczba_menedzerow) {
 }
 
 void pokaz(const Kawiarnia& kawiarnia) {
+    int liczba_gosci = 0;
+    int liczba_zajetych_stolikow = 0;
+    for (int i = 0; i < kawiarnia.liczba_stolikow; ++i) {
+        liczba_gosci += kawiarnia.stoliki[i].liczba_gosci;
+        if (kawiarnia.stoliki[i].status == ZAJETY) {
+            liczba_zajetych_stolikow++;
+        }
+    }
     cout << "Liczba menedzerow: " << kawiarnia.liczba_menedzerow << endl;
     cout << "Liczba kelnerow: " << kawiarnia.liczba_kelnerow << endl;
+    cout << "Liczba gosci: " << liczba_gosci << endl;
+    cout << "Liczba zajetych stolikow: " << liczba_zajetych_stolikow << endl;
 }
 
 void pokaz(const Menedzer& menedzer) {
@@ -118,8 +150,12 @@ void oblicz_srednia(const Menedzer& menedzer) {
                     ++liczba_zamowien;
                 }
             }
-            double srednia = suma_zamowien / liczba_zamowien;
-            cout << "Kelner ID: " << kelner->id << ", Srednia zamowien: " << srednia << endl;
+            if (liczba_zamowien > 0) {
+                double srednia = suma_zamowien / liczba_zamowien;
+                cout << "Kelner ID: " << kelner->id << ", Srednia zamowien: " << srednia << endl;
+            } else {
+                cout << "Kelner ID: " << kelner->id << ", brak zamowien" << endl;
+            }
         }
     }
 }
@@ -146,12 +182,30 @@ void generuj_losowe_dane(Kawiarnia& kawiarnia) {
         kawiarnia.kelnerzy[i]->id = dist_id(eng);
         kawiarnia.kelnerzy[i]->osoba.wiek = dist_wiek(eng);
         kawiarnia.kelnerzy[i]->osoba.godnosc = "Kelner_" + to_string(kawiarnia.kelnerzy[i]->id);
+        kawiarnia.kelnerzy[i]->liczba_zamowien = 5; // Przykładowa liczba zamówień
+        kawiarnia.kelnerzy[i]->liczba_pozycji_w_menu = 3; // Przykładowa liczba pozycji w menu
+        kawiarnia.kelnerzy[i]->zbior_zamowien = new int*[3];
+        for (int j = 0; j < 3; ++j) {
+            kawiarnia.kelnerzy[i]->zbior_zamowien[j] = new int[5];
+            for (int k = 0; k < 5; ++k) {
+                kawiarnia.kelnerzy[i]->zbior_zamowien[j][k] = dist_id(eng) % 5 + 1; // Przykładowe oceny
+            }
+        }
     }
 
     for (int i = 0; i < liczba_menedzerow; ++i) {
         kawiarnia.menedzerowie[i]->osoba.wiek = dist_wiek(eng);
         kawiarnia.menedzerowie[i]->osoba.godnosc = "Menedzer_" + to_string(i + 1);
         kawiarnia.menedzerowie[i]->liczba_pozycji = dist_pozycji(eng);
+        kawiarnia.menedzerowie[i]->menu = new Pozycja_menu[kawiarnia.menedzerowie[i]->liczba_pozycji];
+        for (int j = 0; j < kawiarnia.menedzerowie[i]->liczba_pozycji; ++j) {
+            kawiarnia.menedzerowie[i]->menu[j].nazwa = "Pozycja_" + to_string(j + 1);
+            kawiarnia.menedzerowie[i]->menu[j].liczba_zamowien = 5; // Przykładowa liczba zamówień
+            kawiarnia.menedzerowie[i]->menu[j].kelnerzy_przypisani_do_pozycji = new Kelner*[5];
+            for (int k = 0; k < 5; ++k) {
+                kawiarnia.menedzerowie[i]->menu[j].kelnerzy_przypisani_do_pozycji[k] = kawiarnia.kelnerzy[dist_id(eng) % liczba_kelnerow];
+            }
+        }
     }
 }
 
